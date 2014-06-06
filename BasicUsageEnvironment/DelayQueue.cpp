@@ -98,7 +98,8 @@ DelayQueueEntry::DelayQueueEntry(DelayInterval delay)
 : fDeltaTimeRemaining(delay) {
 	//Next和Prev指针均指向自己
 	fNext = fPrev = this;	
-	//类变量tokenCounter加1
+	//类变量tokenCounter加1，并将该值赋给当前Entry的fToken
+	//fToken可以理解为当前Entry的ID
 	fToken = ++tokenCounter;
 }
 
@@ -111,7 +112,10 @@ void DelayQueueEntry::handleTimeout() {
 
 
 ///// DelayQueue /////
-
+//DelayQueue继承自DelayQueueEntry，
+//所以在它初始化的时候，调用DelayQueueEntry(ETERNITY)
+//将fDeltaTimeRemaining设为ETERNITY，
+//到一个sentinel的作用
 DelayQueue::DelayQueue()
 : DelayQueueEntry(ETERNITY) {
 	//将当前时刻设为第一次同步的时刻
@@ -127,6 +131,7 @@ DelayQueue::~DelayQueue() {
 }
 
 void DelayQueue::addEntry(DelayQueueEntry* newEntry) {
+	//更新队列的时间信息
 	synchronize();
 
 	DelayQueueEntry* cur = head();
@@ -171,26 +176,28 @@ DelayQueueEntry* DelayQueue::removeEntry(intptr_t tokenToFind) {
 	removeEntry(entry);
 	return entry;
 }
-
+//查询队头Entry（任务）还有多久到时
 DelayInterval const& DelayQueue::timeToNextAlarm() {
 	if (head()->fDeltaTimeRemaining == DELAY_ZERO) return DELAY_ZERO; // a common case
-
+	//更新队列中的时间信息。
 	synchronize();
 	return head()->fDeltaTimeRemaining;
 }
-
+//
 void DelayQueue::handleAlarm() {
+	//如果队头的任务没有到时，更新队列时间信息
 	if (head()->fDeltaTimeRemaining != DELAY_ZERO) synchronize();
-
+	//如果队头任务到时间了，则从队列从删除，并调用handleTimeout方法。
 	if (head()->fDeltaTimeRemaining == DELAY_ZERO) {
 		// This event is due to be handled:
 		DelayQueueEntry* toRemove = head();
 		removeEntry(toRemove); // do this first, in case handler accesses queue
-
+		//此处释放toRemove;
 		toRemove->handleTimeout();
+		
 	}
 }
-
+//遍历整个队列，如果找到，则返回该Entry，否则返回NULL
 DelayQueueEntry* DelayQueue::findEntryByToken(intptr_t tokenToFind) {
 	DelayQueueEntry* cur = head();
 	while (cur != this) {
@@ -228,10 +235,10 @@ void DelayQueue::synchronize() {
 
 
 ///// EventTime /////
-
+//获取当前时间，gettimeofday可以精确到毫秒（ms），并且该函数不是系统调用
 EventTime TimeNow() {
 	struct timeval tvNow;
-	//gettimeofday精确到毫秒（ms），并且该函数不是系统调用
+	
 	gettimeofday(&tvNow, NULL);
 
 	return EventTime(tvNow.tv_sec, tvNow.tv_usec);
