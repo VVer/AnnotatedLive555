@@ -27,51 +27,52 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// HandlerSet (etc.) definition //////////
 
 class HandlerDescriptor {
-  HandlerDescriptor(HandlerDescriptor* nextHandler);
-  virtual ~HandlerDescriptor();
+	HandlerDescriptor(HandlerDescriptor* nextHandler);
+	virtual ~HandlerDescriptor();
 
 public:
-  int socketNum;
-  int conditionSet;
-  TaskScheduler::BackgroundHandlerProc* handlerProc;
-  void* clientData;
+	int socketNum;
+	int conditionSet;
+	TaskScheduler::BackgroundHandlerProc* handlerProc;
+	void* clientData;
 
 private:
-  // Descriptors are linked together in a doubly-linked list:
-  friend class HandlerSet;
-  friend class HandlerIterator;
-  HandlerDescriptor* fNextHandler;
-  HandlerDescriptor* fPrevHandler;
+	// Descriptors are linked together in a doubly-linked list:
+	//Ë«ÏòÁ´±í
+	friend class HandlerSet;
+	friend class HandlerIterator;
+	HandlerDescriptor* fNextHandler;
+	HandlerDescriptor* fPrevHandler;
 };
 
 class HandlerSet {
 public:
-  HandlerSet();
-  virtual ~HandlerSet();
+	HandlerSet();
+	virtual ~HandlerSet();
 
-  void assignHandler(int socketNum, int conditionSet, TaskScheduler::BackgroundHandlerProc* handlerProc, void* clientData);
-  void clearHandler(int socketNum);
-  void moveHandler(int oldSocketNum, int newSocketNum);
-
-private:
-  HandlerDescriptor* lookupHandler(int socketNum);
+	void assignHandler(int socketNum, int conditionSet, TaskScheduler::BackgroundHandlerProc* handlerProc, void* clientData);
+	void clearHandler(int socketNum);
+	void moveHandler(int oldSocketNum, int newSocketNum);
 
 private:
-  friend class HandlerIterator;
-  HandlerDescriptor fHandlers;
+	HandlerDescriptor* lookupHandler(int socketNum);
+
+private:
+	friend class HandlerIterator;
+	HandlerDescriptor fHandlers;
 };
 
 class HandlerIterator {
 public:
-  HandlerIterator(HandlerSet& handlerSet);
-  virtual ~HandlerIterator();
+	HandlerIterator(HandlerSet& handlerSet);
+	virtual ~HandlerIterator();
 
-  HandlerDescriptor* next(); // returns NULL if none
-  void reset();
+	HandlerDescriptor* next(); // returns NULL if none
+	void reset();
 
 private:
-  HandlerSet& fOurSet;
-  HandlerDescriptor* fNextPtr;
+	HandlerSet& fOurSet;
+	HandlerDescriptor* fNextPtr;
 };
 
 #endif
