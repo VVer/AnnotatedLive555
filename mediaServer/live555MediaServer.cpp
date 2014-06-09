@@ -23,10 +23,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #pragma comment(lib,"ws2_32")
 #if defined(_DEBUG)
-#pragma comment(lib,"libBasiUsageEnvironmentD")
-#pragma comment(lib,"libgroupsockD")
-#pragma comment(lib,"libliveMediaD")
-#pragma comment(lib,"libUsageEnvironmentD")
+#pragma comment(lib,"BasicUsageEnvironmentD")
+#pragma comment(lib,"groupsockD")
+#pragma comment(lib,"liveMediaD")
+#pragma comment(lib,"UsageEnvironmentD")
 #endif
 
 
