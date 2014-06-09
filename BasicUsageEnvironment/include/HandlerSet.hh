@@ -49,17 +49,23 @@ class HandlerSet {
 public:
 	HandlerSet();
 	virtual ~HandlerSet();
-
-	void assignHandler(int socketNum, int conditionSet, TaskScheduler::BackgroundHandlerProc* handlerProc, void* clientData);
+	// 把一个新的sock插入双向链表中，并用一个HandlerDescriptor对象中建立socket和handler之间的关系
+	void assignHandler(int socketNum, 
+		int conditionSet, 
+		TaskScheduler::BackgroundHandlerProc* handlerProc, 
+		void* clientData);
+	// 删除一个此socketNum对应的节点
 	void clearHandler(int socketNum);
+	// 重设一个SocketNum
 	void moveHandler(int oldSocketNum, int newSocketNum);
 
 private:
+	// 根据 socketNum查找相应的	HandlerDescriptor，没有则返回NULL
 	HandlerDescriptor* lookupHandler(int socketNum);
 
 private:
 	friend class HandlerIterator;
-	HandlerDescriptor fHandlers;
+	HandlerDescriptor fHandlers;   //双向链表的头节点
 };
 
 class HandlerIterator {
@@ -71,7 +77,7 @@ public:
 	void reset();
 
 private:
-	HandlerSet& fOurSet;
+	HandlerSet& fOurSet;	// HandlerSet实例的引用
 	HandlerDescriptor* fNextPtr;
 };
 
