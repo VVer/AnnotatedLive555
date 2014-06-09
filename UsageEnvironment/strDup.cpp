@@ -23,6 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 char* strDup(char const* str) {
   if (str == NULL) return NULL;
+  //³¤¶È°üÀ¨'\0'
   size_t len = strlen(str) + 1;
   char* copy = new char[len];
 
