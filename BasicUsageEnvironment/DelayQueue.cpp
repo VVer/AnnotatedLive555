@@ -122,6 +122,7 @@ DelayQueue::DelayQueue()
 	fLastSyncTime = TimeNow();
 }
 
+
 DelayQueue::~DelayQueue() {
 	while (fNext != this) {
 		DelayQueueEntry* entryToRemove = fNext;
@@ -141,7 +142,7 @@ DelayQueue::~DelayQueue() {
 //之所以这么设计，是因为在系统运行的时候，系统时间有可能被人为的设置为其他值。
 //如果系统时间向前调，对队列的影响不是很大，但是如果向后调节的幅度较大，则所有的Entry都会到时。
 
-void DelayQueue::addEntry(DelayQueueEntry* newEntry) {
+void DelayQueue ::addEntry(DelayQueueEntry* newEntry) {
 	//更新队列里各个Entry的剩余时间
 
 	synchronize();
@@ -155,6 +156,7 @@ void DelayQueue::addEntry(DelayQueueEntry* newEntry) {
 	cur->fDeltaTimeRemaining -= newEntry->fDeltaTimeRemaining;
 
 	// Add "newEntry" to the queue, just before "cur":
+
 	newEntry->fNext = cur;
 	newEntry->fPrev = cur->fPrev;
 	cur->fPrev = newEntry->fPrev->fNext = newEntry;
@@ -176,6 +178,7 @@ void DelayQueue::updateEntry(intptr_t tokenToFind, DelayInterval newDelay) {
 	updateEntry(entry, newDelay);
 }
 
+//删除元素的操作
 void DelayQueue::removeEntry(DelayQueueEntry* entry) {
 	if (entry == NULL || entry->fNext == NULL) return;
 
@@ -186,8 +189,11 @@ void DelayQueue::removeEntry(DelayQueueEntry* entry) {
 	// in case we should try to remove it again
 }
 
+//根据EnTry的tokenID来删除
 DelayQueueEntry* DelayQueue::removeEntry(intptr_t tokenToFind) {
+	//根据ID查找出Entry
 	DelayQueueEntry* entry = findEntryByToken(tokenToFind);
+	//删除该Entry
 	removeEntry(entry);
 	return entry;
 }
@@ -212,7 +218,7 @@ void DelayQueue::handleAlarm() {
 		
 	}
 }
-//遍历整个队列，如果找到，则返回该Entry，否则返回NULL
+//遍历整个队列，根据Entry的ID进行查找，如果找到，则返回该Entry，否则返回NULL
 DelayQueueEntry* DelayQueue::findEntryByToken(intptr_t tokenToFind) {
 	DelayQueueEntry* cur = head();
 	while (cur != this) {

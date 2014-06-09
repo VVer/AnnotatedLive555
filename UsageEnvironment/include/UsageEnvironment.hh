@@ -52,7 +52,7 @@ class TaskScheduler; // forward
 
 class UsageEnvironment {
 public:
-  void reclaim();
+  void reclaim();   
 
   // task scheduler:
   TaskScheduler& taskScheduler() const {return fScheduler;}
