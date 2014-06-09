@@ -82,6 +82,11 @@ private:
   }
 
   struct timeval fTv;
+	//timeval structure
+	//	struct timeval {
+	//		long    tv_sec;         /* seconds */
+	//		long    tv_usec;        /* and microseconds */
+	//	};
 };
 
 #ifndef max
@@ -147,6 +152,8 @@ protected: // abstract base class
 
 private:
   friend class DelayQueue;
+  //Ë«ÏòÁ´±í						 
+
   DelayQueueEntry* fNext;
   DelayQueueEntry* fPrev;
   DelayInterval fDeltaTimeRemaining;

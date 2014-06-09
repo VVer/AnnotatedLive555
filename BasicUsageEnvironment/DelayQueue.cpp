@@ -126,7 +126,19 @@ DelayQueue::~DelayQueue() {
 	}
 }
 
+//将Entry添加到队列中
+//本延时队列为时间差分队列。
+//例如，如果有人三个任务，分别在100，150，350秒之后执行，
+//则队列为
+//	[100]--〉[50]--〉[200]
+//如果此时添加一个200秒之后的任务
+//则队列变为
+//	[100]-->[50]-->[50]->[150]
+//之所以这么设计，是因为在系统运行的时候，系统时间有可能被人为的设置为其他值。
+//如果系统时间向前调，对队列的影响不是很大，但是如果向后调节的幅度较大，则所有的Entry都会到时。
+
 void DelayQueue::addEntry(DelayQueueEntry* newEntry) {
+	//更新队列里各个Entry的剩余时间
 	synchronize();
 
 	DelayQueueEntry* cur = head();
@@ -143,6 +155,9 @@ void DelayQueue::addEntry(DelayQueueEntry* newEntry) {
 	cur->fPrev = newEntry->fPrev->fNext = newEntry;
 }
 
+//1.将该Entry从队列中删除
+//2.给Entry设置新的时间
+//3.将该Entry插入到队列中
 void DelayQueue::updateEntry(DelayQueueEntry* entry, DelayInterval newDelay) {
 	if (entry == NULL) return;
 
