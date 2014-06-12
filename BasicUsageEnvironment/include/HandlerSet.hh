@@ -60,7 +60,7 @@ public:
 	void moveHandler(int oldSocketNum, int newSocketNum);
 
 private:
-	// 根据 socketNum查找相应的	HandlerDescriptor，没有则返回NULL
+	// 根据 socketNum查找相应的HandlerDescriptor，没有则返回NULL
 	HandlerDescriptor* lookupHandler(int socketNum);
 
 private:

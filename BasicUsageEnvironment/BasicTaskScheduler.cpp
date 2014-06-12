@@ -81,6 +81,8 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
   }
 
   int selectResult = select(fMaxNumSockets, &readSet, &writeSet, &exceptionSet, &tv_timeToDelay);
+  
+
   if (selectResult < 0) {
 #if defined(__WIN32__) || defined(_WIN32)
     int err = WSAGetLastError();
@@ -123,6 +125,7 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
   HandlerDescriptor* handler;
   // To ensure forward progress through the handlers, begin past the last
   // socket number that we handled:
+  //定位到上次处理的socket，如果没找到，则重置iter，指向第一个handler
   if (fLastHandledSocketNum >= 0) {
     while ((handler = iter.next()) != NULL) {
       if (handler->socketNum == fLastHandledSocketNum) break;
@@ -132,13 +135,15 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
       iter.reset(); // start from the beginning instead
     }
   }
+  //从当前位置开始往后遍历，检查socket的读写状态：可读、可写、异常
   while ((handler = iter.next()) != NULL) {
     int sock = handler->socketNum; // alias
     int resultConditionSet = 0;
     if (FD_ISSET(sock, &readSet) && FD_ISSET(sock, &fReadSet)/*sanity check*/) resultConditionSet |= SOCKET_READABLE;
     if (FD_ISSET(sock, &writeSet) && FD_ISSET(sock, &fWriteSet)/*sanity check*/) resultConditionSet |= SOCKET_WRITABLE;
     if (FD_ISSET(sock, &exceptionSet) && FD_ISSET(sock, &fExceptionSet)/*sanity check*/) resultConditionSet |= SOCKET_EXCEPTION;
-    if ((resultConditionSet&handler->conditionSet) != 0 && handler->handlerProc != NULL) {
+	//如果当前的状态是handler所关心的，并且proc不为空，则执行handlerProc
+    if ((resultConditionSet&handler->conditionSet) != 0 && handler->handlerProc != NULL) {  
       fLastHandledSocketNum = sock;
           // Note: we set "fLastHandledSocketNum" before calling the handler,
           // in case the handler calls "doEventLoop()" reentrantly.

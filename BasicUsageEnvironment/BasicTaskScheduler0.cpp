@@ -55,7 +55,12 @@ BasicTaskScheduler0::BasicTaskScheduler0()
 BasicTaskScheduler0::~BasicTaskScheduler0() {
 	delete fHandlers;
 }
-//TaskToken对应于fDelayQueue中节点的fToken（ID）
+//向任务队列中添加一个任务
+//参数 ：
+//		microseconds：该任务多少毫秒之后执行
+//		proc：要执行的任务
+//		clientData：proc的参数
+//返回值TaskToken对应于fDelayQueue中节点的fToken（ID）
 TaskToken BasicTaskScheduler0::scheduleDelayedTask(int64_t microseconds,
 	TaskFunc* proc,
 	void* clientData) {
@@ -81,7 +86,8 @@ void BasicTaskScheduler0::doEventLoop(char* watchVariable) {
 		SingleStep();
 	}
 }
-
+//创建一个触发事件
+//返回值EventTriggerId为mask，如果mask为0，表明分配失败，没有可用的槽
 EventTriggerId BasicTaskScheduler0::createEventTrigger(TaskFunc* eventHandlerProc) {
 	unsigned i = fLastUsedTriggerNum;
 	EventTriggerId mask = fLastUsedTriggerMask;
@@ -91,7 +97,7 @@ EventTriggerId BasicTaskScheduler0::createEventTrigger(TaskFunc* eventHandlerPro
 		mask >>= 1;
 		if (mask == 0) mask = 0x80000000;
 
-		if (fTriggeredEventHandlers[i] == NULL) {
+		if (fTriggeredEventHandlers[i] == NULL) {	  //这个slot未分配任务
 			// This trigger number is free; use it:
 			fTriggeredEventHandlers[i] = eventHandlerProc;
 			fTriggeredEventClientDatas[i] = NULL; // sanity
@@ -106,7 +112,7 @@ EventTriggerId BasicTaskScheduler0::createEventTrigger(TaskFunc* eventHandlerPro
 	// All available event triggers are allocated; return 0 instead:
 	return 0;
 }
-
+//删除一个触发事件
 void BasicTaskScheduler0::deleteEventTrigger(EventTriggerId eventTriggerId) {
 	fTriggersAwaitingHandling &= ~eventTriggerId;
 
@@ -141,6 +147,7 @@ void BasicTaskScheduler0::triggerEvent(EventTriggerId eventTriggerId, void* clie
 	// Then, note this event as being ready to be handled.
 	// (Note that because this function (unlike others in the library) can be called from an external thread, we do this last, to
 	//  reduce the risk of a race condition.)
+	//将eventTriggerId的bit位添加到 fTriggersAwaitingHandling中去
 	fTriggersAwaitingHandling |= eventTriggerId;
 }
 
@@ -197,7 +204,7 @@ void* clientData) {
 	handler->handlerProc = handlerProc;
 	handler->clientData = clientData;
 }
-
+//删除一个socketNum对应的HandlerDescriptor
 void HandlerSet::clearHandler(int socketNum) {
 	HandlerDescriptor* handler = lookupHandler(socketNum);
 	delete handler; //此操作会调用HandlerDescriptor::~HandlerDescriptor()，在析构函数里面会将此节点从双向链表中删除
