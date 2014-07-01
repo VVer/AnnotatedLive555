@@ -64,7 +64,7 @@ NetAddress::~NetAddress() {
   clean();
 }
 
-void NetAddress::assign(u_int8_t const* data, unsigned length) {
+void NetAddress::assign(u_int8_t const* data, unsigned length) {  //拷贝数据
   fData = new u_int8_t[length];
   if (fData == NULL) {
     fLength = 0;
@@ -85,10 +85,12 @@ void NetAddress::clean() {
 
 NetAddressList::NetAddressList(char const* hostname)
   : fNumAddresses(0), fAddressArray(NULL) {
-  // First, check whether "hostname" is an IP address string:
+  // First, check whether "hostname" is an IP address string: 
+	//首先，检查hostname是不是ip地址，如“8.8.8.8”
   netAddressBits addr = our_inet_addr((char*)hostname);
   if (addr != INADDR_NONE) {
     // Yes, it was an IP address string.  Return a 1-element list with this address:
+	//如果是一个IP地址，直接返回只有一个元素的IP地址列表
     fNumAddresses = 1;
     fAddressArray = new NetAddress*[fNumAddresses];
     if (fAddressArray == NULL) return;
@@ -98,6 +100,19 @@ NetAddressList::NetAddressList(char const* hostname)
   }
     
   // "hostname" is not an IP address string; try resolving it as a real host name instead:
+  //如果hostname不是一个IP地址，也就是说它是一个域名或者主机名，如“www.google.com”或者“user-vivida”,
+  //那么就需要用通过解析域名来得到IP地址列表
+  /*
+  struct hostent
+  {
+	  char    *h_name;
+	  char    **h_aliases;
+	  int     h_addrtype;
+	  int     h_length;
+	  char    **h_addr_list;
+#define h_addr h_addr_list[0] 
+  };
+  */
 #if defined(USE_GETHOSTBYNAME) || defined(VXWORKS)
   struct hostent* host;
 #if defined(VXWORKS)
@@ -111,6 +126,7 @@ NetAddressList::NetAddressList(char const* hostname)
 
   u_int8_t const** const hAddrPtr = (u_int8_t const**)host->h_addr_list;
   // First, count the number of addresses:
+ 
   u_int8_t const** hAddrPtr1 = hAddrPtr;
   while (*hAddrPtr1 != NULL) {
     ++fNumAddresses;
@@ -118,9 +134,10 @@ NetAddressList::NetAddressList(char const* hostname)
   }
 
   // Next, set up the list:
+  //接下来，给IP地址列表赋值
   fAddressArray = new NetAddress*[fNumAddresses];
   if (fAddressArray == NULL) return;
-
+  
   for (unsigned i = 0; i < fNumAddresses; ++i) {
     fAddressArray[i] = new NetAddress(hAddrPtr[i], host->h_length);
   }
@@ -188,6 +205,7 @@ void NetAddressList::assign(unsigned numAddresses, NetAddress** addressArray) {
 }
 
 void NetAddressList::clean() {
+	//清空链表操作
   while (fNumAddresses-- > 0) {
     delete fAddressArray[fNumAddresses];
   }

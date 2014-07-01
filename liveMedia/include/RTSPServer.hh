@@ -60,7 +60,7 @@ protected:
 #ifndef RTSP_BUFFER_SIZE
 #define RTSP_BUFFER_SIZE 10000 // for incoming requests, and outgoing responses
 #endif
-
+#include <map>
 class RTSPServer: public Medium {
 public:
   static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554,
@@ -176,13 +176,14 @@ private: // redefined virtual functions
 
 public: // should be protected, but some old compilers complain otherwise
   class RTSPClientSession; // forward
+  
   // The state of a TCP connection used by a RTSP client:
   class RTSPClientConnection {
   public:
     RTSPClientConnection(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr);
     virtual ~RTSPClientConnection();
     // A data structure that's used to implement the "REGISTER" command:
-    class ParamsForREGISTER {
+    class ParamsForREGISTER {					
     public:
       ParamsForREGISTER(RTSPClientConnection* ourConnection, char const* url, char const* urlSuffix,
 			Boolean reuseConnection, Boolean deliverViaTCP, char const* proxyURLSuffix);
@@ -284,6 +285,7 @@ public: // should be protected, but some old compilers complain otherwise
 					 ServerMediaSubsession* subsession, char const* fullRequestStr);
     virtual void handleCmd_SET_PARAMETER(RTSPClientConnection* ourClientConnection,
 					 ServerMediaSubsession* subsession, char const* fullRequestStr);
+	virtual void send_ANNOUNCE(RTSPClientConnection* ourClientConnection);
   protected:
     UsageEnvironment& envir() { return fOurServer.envir(); }
     void reclaimStreamStates();
@@ -301,8 +303,9 @@ public: // should be protected, but some old compilers complain otherwise
   protected:
     RTSPServer& fOurServer;
     u_int32_t fOurSessionId;
+	u_int16_t fServerRTPPort;
     ServerMediaSession* fOurServerMediaSession;
-    Boolean fIsMulticast, fStreamAfterSETUP;
+    Boolean fIsMulticast, fStreamAfterSETUP;   //  fIsMulticast此流是否是组播
     unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
     Boolean usesTCPTransport() const { return fTCPStreamIdCount > 0; }
     TaskToken fLivenessCheckTask;
@@ -311,8 +314,10 @@ public: // should be protected, but some old compilers complain otherwise
       ServerMediaSubsession* subsession;
       void* streamToken;
     } * fStreamStates;
-  };
+  };										    
 
+  struct RTSPConnectSession { RTSPClientSession * clientSession; RTSPClientConnection* clientConnetction; void SendAnnounce(); };
+  static std::map<u_int16_t, struct RTSPConnectSession> fPortSessionMap;
 protected:
   // If you subclass "RTSPClientConnection", then you must also redefine this virtual function in order
   // to create new objects of your subclass:

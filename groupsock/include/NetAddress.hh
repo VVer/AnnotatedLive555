@@ -36,14 +36,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Definition of a type representing a low-level network address.
 // At present, this is 32-bits, for IPv4.  Later, generalize it,
 // to allow for IPv6.
+//netAddressBits是32位的无符号整型数字
 typedef u_int32_t netAddressBits;
-
+//网络IP地址
 class NetAddress {
     public:
 	NetAddress(u_int8_t const* data,
 		   unsigned length = 4 /* default: 32 bits */);
-	NetAddress(unsigned length = 4); // sets address data to all-zeros
-	NetAddress(NetAddress const& orig);
+	NetAddress(unsigned length = 4); // sets address data to all-zeros 把地址置为0:0:0:0
+	NetAddress(NetAddress const& orig);		   //复制构造函数
 	NetAddress& operator=(NetAddress const& rightSide);
 	virtual ~NetAddress();
 
@@ -52,13 +53,16 @@ class NetAddress {
 		{ return fData; }
 
     private:
-	void assign(u_int8_t const* data, unsigned length);
-	void clean();
+	void assign(u_int8_t const* data, unsigned length);	//给fData和fLength赋值
+	void clean();	  //释放fData占用的空间，并将fLength设为0；
 
 	unsigned fLength;
 	u_int8_t* fData;
 };
-
+ //地址列表：
+//如果host那么是ip地址列表，则NetAddressList只有一个元素。
+//如果hostname是一个域名或者主机名的话，就可能有多个地址，
+//如“www.google.com”,这个域名可能对应着多个IP地址，此时 NetAddressList就会存储这多个IP地址
 class NetAddressList {
     public:
 	NetAddressList(char const* hostname);
@@ -86,11 +90,11 @@ class NetAddressList {
 
 	friend class Iterator;
 	unsigned fNumAddresses;
-	NetAddress** fAddressArray;
+	NetAddress** fAddressArray;	 //	fAddressArray是一个指针，指向一个NetAddress数组
 };
 
 typedef u_int16_t portNumBits;
-
+//用来将主机字节顺序转化为网络字节顺序，bigendian
 class Port {
     public:
 	Port(portNumBits num /* in host byte order */);
@@ -109,6 +113,7 @@ UsageEnvironment& operator<<(UsageEnvironment& s, const Port& p);
 
 
 // A generic table for looking up objects by (address1, address2, port)
+//一个通用的hash表，并且键是由三个元素组成的。
 class AddressPortLookupTable {
     public:
 	AddressPortLookupTable();
@@ -145,6 +150,7 @@ Boolean IsMulticastAddress(netAddressBits address);
 
 
 // A mechanism for displaying an IPv4 address in ASCII.  This is intended to replace "inet_ntoa()", which is not thread-safe.
+//将网络地址转换成以“.”点隔的字符串格式。	   n (network) to a (ASCII)
 class AddressString {
 public:
   AddressString(struct sockaddr_in const& addr);

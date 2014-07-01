@@ -1387,6 +1387,7 @@ void RTSPServer::RTSPClientConnection::continueHandlingREGISTER1(ParamsForREGIST
 
 ////////// RTSPServer::RTSPClientSession implementation //////////
 
+//
 RTSPServer::RTSPClientSession
 ::RTSPClientSession(RTSPServer& ourServer, u_int32_t sessionId)
 : fOurServer(ourServer), fOurSessionId(sessionId), fOurServerMediaSession(NULL), fIsMulticast(False), fStreamAfterSETUP(False),
@@ -1413,6 +1414,7 @@ RTSPServer::RTSPClientSession::~RTSPClientSession() {
 			fOurServerMediaSession = NULL;
 		}
 	}
+	fOurServer.fPortSessionMap.erase(fServerRTPPort);
 }
 
 void RTSPServer::RTSPClientSession::reclaimStreamStates() {
@@ -1511,7 +1513,29 @@ static Boolean parsePlayNowHeader(char const* buf) {
 
 	return True;
 }
-
+std::map<u_int16_t, RTSPServer::RTSPConnectSession> RTSPServer::fPortSessionMap;
+void  RTSPServer::RTSPClientSession
+::send_ANNOUNCE(RTSPClientConnection* ourClientConnection)
+{
+	char const* streamUrl = fOurServer.rtspURL(fOurServerMediaSession);
+	unsigned char *buf = ourClientConnection->fResponseBuffer;
+	snprintf((char*)buf, sizeof ourClientConnection->fResponseBuffer,
+		"ANNOUNCE %s RTSP/1.0\r\n"
+		//"Cseq: %s\r\n"
+		"Session: %08X\r\n"
+		"x-notice: 2101[\"End of Stream\"]\r\n\r\n",
+		streamUrl,
+		//ourClientConnection->fCurrentCSeq,
+		fOurSessionId
+		);
+	fprintf(stderr, (char*)ourClientConnection);
+	send(ourClientConnection->fClientOutputSocket, (char const*)buf, strlen((char*)ourClientConnection->fResponseBuffer), 0);
+	delete[] streamUrl;
+}
+void  RTSPServer::RTSPConnectSession::SendAnnounce()
+{
+	clientSession->send_ANNOUNCE(clientConnetction);
+}
 void RTSPServer::RTSPClientSession
 ::handleCmd_SETUP(RTSPServer::RTSPClientConnection* ourClientConnection,
 char const* urlPreSuffix, char const* urlSuffix, char const* fullRequestStr) {
@@ -1678,10 +1702,11 @@ char const* urlPreSuffix, char const* urlSuffix, char const* fullRequestStr) {
 		ReceivingInterfaceAddr = SendingInterfaceAddr = sourceAddr.sin_addr.s_addr;
 #endif
 
+
 		subsession->getStreamParameters(fOurSessionId, ourClientConnection->fClientAddr.sin_addr.s_addr,
 			clientRTPPort, clientRTCPPort,
 			tcpSocketNum, rtpChannelId, rtcpChannelId,
-			destinationAddress, destinationTTL, fIsMulticast,
+			destinationAddress, destinationTTL, fIsMulticast,   //如果使用组播的话，destinationAddress不能为空
 			serverRTPPort, serverRTCPPort,
 			fStreamStates[streamNum].streamToken);
 		SendingInterfaceAddr = origSendingInterfaceAddr;
@@ -1744,6 +1769,12 @@ char const* urlPreSuffix, char const* urlSuffix, char const* fullRequestStr) {
 								  dateHeader(),
 								  destAddrStr.val(), sourceAddrStr.val(), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
 								  fOurSessionId, timeoutParameterString);
+							  fServerRTPPort = serverRTPPort.num();
+
+							  struct  RTSPConnectSession rcs;
+							  rcs.clientConnetction = ourClientConnection;
+							  rcs.clientSession = this;
+							  fOurServer.fPortSessionMap[fServerRTPPort] = rcs;  ////add by me to process Announce
 							  break;
 			}
 			case RTP_TCP: {

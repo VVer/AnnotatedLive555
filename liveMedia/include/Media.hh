@@ -49,6 +49,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class Medium {
 public:
+	//从哈希表中查找mediumName对应的Medium，如果查找成功，则返回true，并将resultMedium设为相应的Medium
+	//否则的话，返回false, resultMedium为空 
   static Boolean lookupByName(UsageEnvironment& env,
 			      char const* mediumName,
 			      Medium*& resultMedium);

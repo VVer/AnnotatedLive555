@@ -256,7 +256,7 @@ void DelayQueue::synchronize() {
 
 
 ///// EventTime /////
-//获取当前时间，gettimeofday可以精确到毫秒（ms），并且该函数不是系统调用
+//获取当前时间，gettimeofday可以精确到微秒（ms），并且该函数不是系统调用
 EventTime TimeNow() {
 	struct timeval tvNow;
 	

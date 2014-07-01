@@ -134,6 +134,9 @@ SocketLookupTable::~SocketLookupTable() {
 	delete fTable;
 }
 
+//从Hash表中找到该port对应的Socket对象
+//如果找到，这直接返回该Socket对象
+//如果没找到，就创建新的Socket
 Socket* SocketLookupTable::Fetch(UsageEnvironment& env, Port port,
 	Boolean& isNew) {
 	isNew = False;

@@ -19,7 +19,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "BasicHashTable.hh"
 #include "strDup.hh"
-
 #if defined(__WIN32__) || defined(_WIN32)
 #else
 #include <stddef.h>
@@ -140,7 +139,7 @@ BasicHashTable::TableEntry* BasicHashTable::lookupKey(char const* key, unsigned&
 	return entry;
 }
 //比较两个key是否相等
-//其中，STRING_HASH_KEYS代表key是字符串， ONE_WORD_HASH_KEYS代表一个指针，如函数指针。
+//其中，STRING_HASH_KEYS代表key是字符串， ONE_WORD_HASH_KEYS代表一个指针，如函数指针,或者指向一个对象。
 Boolean BasicHashTable::keyMatches(char const* key1, char const* key2) const {
 	// The way we check the keys for a match depends upon their type:
 	if (fKeyType == STRING_HASH_KEYS) {
@@ -181,7 +180,7 @@ void BasicHashTable::assignKey(TableEntry* entry, char const* key) {
 	else if (fKeyType == ONE_WORD_HASH_KEYS) {
 		entry->key = key;
 	}
-	else if (fKeyType > 0) {
+	else if (fKeyType > 0) {   //有时候key可以是组合键，比如(int key1,int key2, int key3, void* value)
 		unsigned* keyFrom = (unsigned*)key;
 		unsigned* keyTo = new unsigned[fKeyType];
 		for (int i = 0; i < fKeyType; ++i) keyTo[i] = keyFrom[i];

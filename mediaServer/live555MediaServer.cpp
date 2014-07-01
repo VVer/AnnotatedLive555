@@ -23,10 +23,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #pragma comment(lib,"ws2_32")
 #if defined(_DEBUG)
-#pragma comment(lib,"BasicUsageEnvironmentD")
-#pragma comment(lib,"groupsockD")
-#pragma comment(lib,"liveMediaD")
-#pragma comment(lib,"UsageEnvironmentD")
+#pragma comment(lib,"libBasicUsageEnvironmentD")
+#pragma comment(lib,"libgroupsockD")
+#pragma comment(lib,"libliveMediaD")
+#pragma comment(lib,"libUsageEnvironmentD")
 #endif
 
 
@@ -98,6 +98,5 @@ int main(int argc, char** argv) {
   }
 
   env->taskScheduler().doEventLoop(); // does not return
-
   return 0; // only to prevent compiler warning
 }
