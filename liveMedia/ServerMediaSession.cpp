@@ -219,14 +219,7 @@ float ServerMediaSession::duration() const {
 //尝试删除所有的SeverMediaSession
 //
 void ServerMediaSession::deleteAllSubsessions() {
-	/*ServerMediaSubsession *p = fSubsessionsHead;
-	ServerMediaSubsession *t;
-	while (p != NULL)
-	{
-		t = p;
-		p = p->fNext;
-		Medium::close(t);
-	}*/
+
 	Medium::close(fSubsessionsHead); //fSubsessionsHead的析构函数会逐个调用Medium::close来析构所有元素。
 	fSubsessionsHead = fSubsessionsTail = NULL;
 	fSubsessionCounter = 0;
@@ -358,9 +351,9 @@ ServerMediaSubsessionIterator
 ServerMediaSubsessionIterator::~ServerMediaSubsessionIterator() {
 }
 
+//返回当前节点，并将指针移到下一个节点
 ServerMediaSubsession* ServerMediaSubsessionIterator::next() {
 	ServerMediaSubsession* result = fNextPtr;
-
 	if (fNextPtr != NULL) fNextPtr = fNextPtr->fNext;
 
 	return result;
@@ -450,7 +443,8 @@ void ServerMediaSubsession::getAbsoluteTimeRange(char*& absStartTime, char*& abs
 	//默认情况下，live555不支持绝对时间，所以将两个参数都设置为NULL，表示不支持。
 	absStartTime = absEndTime = NULL;
 }
-
+//参数addressBits： 主机IP地址的无符号整型（32位）
+//参数 portBits：端口号，short类型
 void ServerMediaSubsession::setServerAddressAndPortForSDP(netAddressBits addressBits,
 	portNumBits portBits) {
 	fServerAddressForSDP = addressBits;

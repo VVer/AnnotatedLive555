@@ -36,7 +36,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Definition of a type representing a low-level network address.
 // At present, this is 32-bits, for IPv4.  Later, generalize it,
 // to allow for IPv6.
-//netAddressBits是32位的无符号整型数字
+//netAddressBits是32位的无符号整型数字，相当于网络字节顺序的long
 typedef u_int32_t netAddressBits;
 //网络IP地址
 class NetAddress {
