@@ -109,10 +109,11 @@ public:
 
   char const* url() const;
 
-  char describeCompletedFlag;
+  char describeCompletedFlag;//该属性初始化为0，当后端或者说是"源端"返回了“DESCRIBE”响应。
     // initialized to 0; set to 1 when the back-end "DESCRIBE" completes.
     // (This can be used as a 'watch variable' in "doEventLoop()".)
   Boolean describeCompletedSuccessfully() const { return fClientMediaSession != NULL; }
+	//这个函数是和describeCompletedFlag一起使用的，目的是为了检查  后端返回的	“DESCRIBE”是否完全*成功*
     // This can be used - along with "describeCompletdFlag" - to check whether the back-end "DESCRIBE" completed *successfully*.
 
 protected:
@@ -130,7 +131,9 @@ protected:
   // subclass's constructor, initialize the parent class (i.e., "ProxyServerMediaSession")
   // constructor by passing your new function as the "ourCreateNewProxyRTSPClientFunc"
   // parameter.
-
+   //翻译：如果你要继承 “ProxyRTSPClient”，你需要定义一个和 “createNewProxyRTSPClientFunc”参数一致的函数---用于
+  //创建一个新的派生类。你应该同时继承"ProxyServerMediaSession"，	并且，在派生类的构造函数中初始化父类（也就是，“ProxyServerMediaSession”）
+  //的构造函数，传递新定义的同 “ourCreateNewProxyRTSPClientFunc”	的函数作为参数。
 protected:
   RTSPServer* fOurRTSPServer;
   ProxyRTSPClient* fProxyRTSPClient;

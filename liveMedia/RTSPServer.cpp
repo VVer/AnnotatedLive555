@@ -1528,8 +1528,8 @@ void  RTSPServer::RTSPClientSession
 		//ourClientConnection->fCurrentCSeq,
 		fOurSessionId
 		);
-	fprintf(stderr, (char*)ourClientConnection);
-	send(ourClientConnection->fClientOutputSocket, (char const*)buf, strlen((char*)ourClientConnection->fResponseBuffer), 0);
+	fprintf(stderr, (char*)buf);
+	send(ourClientConnection->fClientOutputSocket, (char const*)buf, strlen((char*)buf), 0);
 	delete[] streamUrl;
 }
 void  RTSPServer::RTSPConnectSession::SendAnnounce()
@@ -1769,8 +1769,8 @@ char const* urlPreSuffix, char const* urlSuffix, char const* fullRequestStr) {
 								  dateHeader(),
 								  destAddrStr.val(), sourceAddrStr.val(), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
 								  fOurSessionId, timeoutParameterString);
+							 
 							  fServerRTPPort = serverRTPPort.num();
-
 							  struct  RTSPConnectSession rcs;
 							  rcs.clientConnetction = ourClientConnection;
 							  rcs.clientSession = this;

@@ -115,6 +115,7 @@ private:
   UsageEnvironment& fEnv;
   HashTable* fTable;
   unsigned fNameGenerator;
+
 };
 
 

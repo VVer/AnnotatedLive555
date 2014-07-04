@@ -24,92 +24,96 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// Medium //////////
 
 Medium::Medium(UsageEnvironment& env)
-	: fEnviron(env), fNextTask(NULL) {
-  // First generate a name for the new medium:
-  MediaLookupTable::ourMedia(env)->generateNewName(fMediumName, mediumNameMaxLen);
-  env.setResultMsg(fMediumName);
+: fEnviron(env), fNextTask(NULL) {
+	// First generate a name for the new medium:
+	//首先，生成媒体资源的名字
+	MediaLookupTable::ourMedia(env)->generateNewName(fMediumName, mediumNameMaxLen);
+	env.setResultMsg(fMediumName);
 
-  // Then add it to our table:
-  MediaLookupTable::ourMedia(env)->addNew(this, fMediumName);
+	// Then add it to our table:
+	//在运行环境的一个哈希表中添加本媒体信息
+	MediaLookupTable::ourMedia(env)->addNew(this, fMediumName);
 }
 
 Medium::~Medium() {
-  // Remove any tasks that might be pending for us:
-  fEnviron.taskScheduler().unscheduleDelayedTask(fNextTask);
+	// Remove any tasks that might be pending for us:
+	fEnviron.taskScheduler().unscheduleDelayedTask(fNextTask);
 }
 
 Boolean Medium::lookupByName(UsageEnvironment& env, char const* mediumName,
-				  Medium*& resultMedium) {
-  resultMedium = MediaLookupTable::ourMedia(env)->lookup(mediumName);
-  if (resultMedium == NULL) {
-    env.setResultMsg("Medium ", mediumName, " does not exist");
-    return False;
-  }
-
-  return True;
+	Medium*& resultMedium) {
+	resultMedium = MediaLookupTable::ourMedia(env)->lookup(mediumName);
+	if (resultMedium == NULL) {
+		env.setResultMsg("Medium ", mediumName, " does not exist");
+		return False;
+	}
+	return True;
 }
 
 void Medium::close(UsageEnvironment& env, char const* name) {
-  MediaLookupTable::ourMedia(env)->remove(name);
+	MediaLookupTable::ourMedia(env)->remove(name);
 }
 
 void Medium::close(Medium* medium) {
-  if (medium == NULL) return;
+	if (medium == NULL) return;
 
-  close(medium->envir(), medium->name());
+	close(medium->envir(), medium->name());
 }
 
 Boolean Medium::isSource() const {
-  return False; // default implementation
+	return False; // default implementation
 }
 
 Boolean Medium::isSink() const {
-  return False; // default implementation
+	return False; // default implementation
 }
 
 Boolean Medium::isRTCPInstance() const {
-  return False; // default implementation
+	return False; // default implementation
 }
 
 Boolean Medium::isRTSPClient() const {
-  return False; // default implementation
+	return False; // default implementation
 }
 
 Boolean Medium::isRTSPServer() const {
-  return False; // default implementation
+	return False; // default implementation
 }
 
 Boolean Medium::isMediaSession() const {
-  return False; // default implementation
+	return False; // default implementation
 }
 
 Boolean Medium::isServerMediaSession() const {
-  return False; // default implementation
+	return False; // default implementation
 }
 
 Boolean Medium::isDarwinInjector() const {
-  return False; // default implementation
+	return False; // default implementation
 }
 
 
 ////////// _Tables implementation //////////
-
+//liveMediaPriv是一个哈希表，此处实现了一个单例模式
 _Tables* _Tables::getOurTables(UsageEnvironment& env, Boolean createIfNotPresent) {
-  if (env.liveMediaPriv == NULL && createIfNotPresent) {
-    env.liveMediaPriv = new _Tables(env);
-  }
-  return (_Tables*)(env.liveMediaPriv);
+	//如果liveMediaPriv为空，则创建一个哈希表，并将liveMediaPriv指向新建的哈希表，
+	// 然后返回此哈希表
+	if (env.liveMediaPriv == NULL && createIfNotPresent) {
+		env.liveMediaPriv = new _Tables(env);
+	}
+	return (_Tables*)(env.liveMediaPriv);
 }
 
 void _Tables::reclaimIfPossible() {
-  if (mediaTable == NULL && socketTable == NULL) {
-    fEnv.liveMediaPriv = NULL;
-    delete this;
-  }
+	//如果 mediaTable和socketTable均为空的话，则删除本对象，回收资源
+	if (mediaTable == NULL && socketTable == NULL) {
+		fEnv.liveMediaPriv = NULL;
+		delete this;
+	}
 }
-
+ //_Table类的构造函数
 _Tables::_Tables(UsageEnvironment& env)
-  : mediaTable(NULL), socketTable(NULL), fEnv(env) {
+: mediaTable(NULL), socketTable(NULL), fEnv(env) {
 }
 
 _Tables::~_Tables() {
@@ -119,49 +123,58 @@ _Tables::~_Tables() {
 ////////// MediaLookupTable implementation //////////
 
 MediaLookupTable* MediaLookupTable::ourMedia(UsageEnvironment& env) {
-  _Tables* ourTables = _Tables::getOurTables(env);
-  if (ourTables->mediaTable == NULL) {
-    // Create a new table to record the media that are to be created in
-    // this environment:
-    ourTables->mediaTable = new MediaLookupTable(env);
-  }
-  return ourTables->mediaTable;
-}
 
+	_Tables* ourTables = _Tables::getOurTables(env);
+	if (ourTables->mediaTable == NULL) {
+		// Create a new table to record the media that are to be created in
+		// this environment:
+		//创建一个运行本环境需要的一个哈希表，存放媒体信息
+		ourTables->mediaTable = new MediaLookupTable(env);
+	}
+	return ourTables->mediaTable;
+}
+//从哈希表中查找那么对应的Medium
 Medium* MediaLookupTable::lookup(char const* name) const {
-  return (Medium*)(fTable->Lookup(name));
+	return (Medium*)(fTable->Lookup(name));
 }
 
+//将mediumName/Medium添加到哈希表fTable中
 void MediaLookupTable::addNew(Medium* medium, char* mediumName) {
-  fTable->Add(mediumName, (void*)medium);
+	fTable->Add(mediumName, (void*)medium);
 }
 
+//将媒体信息Medium先从哈希表fTable中删除，然后释放Medium
 void MediaLookupTable::remove(char const* name) {
-  Medium* medium = lookup(name);
-  if (medium != NULL) {
-    fTable->Remove(name);
-    if (fTable->IsEmpty()) {
-      // We can also delete ourselves (to reclaim space):
-      _Tables* ourTables = _Tables::getOurTables(fEnv);
-      delete this;
-      ourTables->mediaTable = NULL;
-      ourTables->reclaimIfPossible();
-    }
-
-    delete medium;
-  }
+	//先从哈希表中查找name对应的medium
+	//如果该项存在，则删除该对象
+	Medium* medium = lookup(name);
+	if (medium != NULL) {
+		fTable->Remove(name);
+		if (fTable->IsEmpty()) {
+			// We can also delete ourselves (to reclaim space):
+			//删除自己用于回收空间
+			_Tables* ourTables = _Tables::getOurTables(fEnv);
+			delete this;
+			ourTables->mediaTable = NULL;
+			ourTables->reclaimIfPossible();
+		}
+		//释放medium
+		delete medium;
+	}
 }
 
 void MediaLookupTable::generateNewName(char* mediumName,
-				       unsigned /*maxLen*/) {
-  // We should really use snprintf() here, but not all systems have it
-  sprintf(mediumName, "liveMedia%d", fNameGenerator++);
+	unsigned /*maxLen*/) {
+	// We should really use snprintf() here, but not all systems have it
+	//媒体命名规则liveMediaN
+	sprintf(mediumName, "liveMedia%d", fNameGenerator++);
 }
 
 MediaLookupTable::MediaLookupTable(UsageEnvironment& env)
-  : fEnv(env), fTable(HashTable::create(STRING_HASH_KEYS)), fNameGenerator(0) {
+: fEnv(env), fTable(HashTable::create(STRING_HASH_KEYS)), fNameGenerator(0) {
 }
 
 MediaLookupTable::~MediaLookupTable() {
-  delete fTable;
+	//删除在堆中申请的内存
+	delete fTable;
 }
